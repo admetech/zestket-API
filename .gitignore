@@ -1,0 +1,7 @@
+server/settings/environments/local.py
+server/settings/environments/production.py
+*/__*__/*
+*/*/__*__/*
+static/*
+.vscode/settings.json
+.vscode/.ropeproject/config.py

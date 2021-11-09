@@ -1,0 +1,39 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "debug server",
+            "type": "shell",
+            "command": "DJANGO_ENV=local python3.9 -m pipenv run python manage.py runserver 8001"
+        },
+        {
+            "label": "debug server ASGI",
+            "type": "shell",
+            "command": "DJANGO_ENV=local python3.9 -m pipenv run python manage.py collectstatic --noinput; DJANGO_ENV=local python3.9 -m pipenv run daphne server.asgi:application"
+        },
+        {
+            "label": "database migrations",
+            "type": "shell",
+            "command": "DJANGO_ENV=local python3.9 -m pipenv run python manage.py makemigrations ; DJANGO_ENV=local python3.9 -m pipenv run python manage.py migrate"
+        },
+        {
+            "label": "automated test",
+            "type": "shell",
+            "command": "DJANGO_ENV=local python3.9 -m pipenv run python -Wa manage.py test --noinput --verbosity 2 --failfast --debug-sql"
+        },
+        {
+            "label": "automated test update snapshots",
+            "type": "shell",
+            "command": "DJANGO_ENV=local python3.9 -m pipenv run python -Wa manage.py test --noinput --verbosity 2 --failfast --debug-sql --snapshot-update"
+        },
+        {
+            "label": "django shell",
+            "type": "shell",
+            "command": "DJANGO_ENV=local python3.9 -m pipenv run python manage.py shell"
+        },
+    ]
+}
+
+

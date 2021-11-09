@@ -1,0 +1,35 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[packages]
+Django = "*"
+graphene-django = "*"
+django-filter = "*"
+django-split-settings = "*"
+psycopg2-binary = "*"
+python-decouple = "*"
+djangorestframework-simplejwt = "==4.6.0"
+djangorestframework = "*"
+gunicorn = "*"
+django-sendgrid-v5 = "*"
+cryptography = "*"
+daphne = "*"
+snapshottest = "*"
+django-cors-headers = "*"
+packaging = "*"
+drf-yasg = "*"
+django-graphql-jwt = "==0.3.1"
+requests = "*"
+twilio = "*"
+boto3 = "*"
+pillow = "*"
+
+[requires]
+python_version = "3.9"
+
+[dev-packages]
+django-debug-toolbar = "*"
+pep8 = "*"
+black = "==21.7b0"

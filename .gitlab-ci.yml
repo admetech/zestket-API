@@ -1,0 +1,128 @@
+# python docker image for easy build
+# image: amanskywalker/docker_ubuntu
+image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:latest
+
+# Pick zero or more services to be used on all builds.
+# Only needed when using a docker container to run your tests in.
+# Check out: http://docs.gitlab.com/ce/ci/docker/using_docker_images.html#what-is-a-service
+services:
+  - docker:dind
+
+variables:
+  # docker configurations 
+  DOCKER_HOST: tcp://docker:2376  #registry.gitlab.com
+  DOCKER_TLS_CERTDIR: "/certs"
+  CONTAINER_TEST_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
+
+# This folder is cached between builds
+# http://docs.gitlab.com/ce/ci/yaml/README.html#cache
+cache:
+  paths:
+  - ~/.cache/pip/
+
+stages:
+  - test
+  - code_coverage
+  # - build
+  # - test_image
+  # - release
+  - deploy
+
+test:
+  # test the current branch
+  image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/amanskywalker/python-gis
+  stage: test
+  services:
+    - name: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/postgis/postgis:12-master
+      alias: postgres
+  variables:
+    # postgres SQL configurations
+    POSTGRES_DB: ci
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    POSTGRES_HOST_AUTH_METHOD: trust
+  script: 
+    # run the unittest for the current branch
+    # Print out python version for debugging
+    - python -V
+    # install the dependencies
+    - pipenv install --system
+    # list the file structure
+    - ls -lR
+    # print settings
+    # make the necessary schema
+    - DJANGO_ENV=$CI_JOB_STAGE python manage.py dbshell -- -c "CREATE SCHEMA mrktyz;"
+    # check settings
+    - DJANGO_ENV=$CI_JOB_STAGE python manage.py diffsettings
+    # migrate the db 
+    - DJANGO_ENV=$CI_JOB_STAGE python manage.py migrate
+    # run the unittest
+    # - DJANGO_ENV=$CI_JOB_STAGE python -Wa manage.py test --verbosity 2 --failfast --debug-sql --keepdb --noinput
+    # check for the deployement
+    - DJANGO_ENV=$CI_JOB_STAGE python -Wa manage.py check --deploy
+
+code_quality:
+  stage: code_coverage
+  needs: []
+  # image: ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:latest
+  variables:
+    DOCKER_DRIVER: overlay2
+  allow_failure: true
+  # services:
+  #   - ${CI_DEPENDENCY_PROXY_GROUP_IMAGE_PREFIX}/docker:dind
+  script:
+    - export SP_VERSION=$(echo "$CI_SERVER_VERSION" | sed 's/^\([0-9]*\)\.\([0-9]*\).*/\1-\2-stable/')
+    - docker run
+        --env SOURCE_CODE="$PWD"
+        --volume "$PWD":/code
+        --volume /var/run/docker.sock:/var/run/docker.sock
+        registry.gitlab.com/gitlab-org/ci-cd/codequality:${VERSION:-latest} /code
+  artifacts:
+    reports:
+      codequality: gl-code-quality-report.json
+
+
+# build:
+#   # build the application if the test passed
+#   stage: build
+#   # construct the docker container for the current branch
+#   script:
+#     # logged into docker
+#     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY registry.gitlab.com
+#     # build the image
+#     - docker build --pull -t $CONTAINER_TEST_IMAGE .
+#     # push the image for further processing
+#     - docker push $CONTAINER_TEST_IMAGE
+
+
+# test_image:
+#   # test the image 
+#   stage: test_image
+#   # Run scripts
+#   script:
+#     - docker login registry.gitlab.com -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#     - docker pull $CONTAINER_TEST_IMAGE
+#     # - docker-compose up
+  
+
+# release-image:
+#   # create an image for the deployment as all (as of now arbitrary) test has passed
+#   stage: release
+#   script:
+#     # logged into docker
+#     - docker login registry.gitlab.com -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#     - docker pull $CONTAINER_TEST_IMAGE
+#     - docker tag $CONTAINER_TEST_IMAGE $CONTAINER_RELEASE_IMAGE
+#     - docker push $CONTAINER_RELEASE_IMAGE
+#   only:
+#     - master
+
+deploy:
+  # script to deploy the image
+  stage: deploy
+  script:
+    - echo "deploying"
+  only:
+    - master
+  when: manual

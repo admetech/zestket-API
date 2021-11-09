@@ -1,0 +1,225 @@
+import os
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = '))vn+w57l^0o=uxuc&@1u2*g=z*9yu#_%$@7^%j%v_m07a=fdc'
+
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = False
+
+# Make it true for the development API
+DEV = True
+
+ALLOWED_HOSTS = ['devapi.adme.co.in']
+
+# add Additional APPS
+INSTALLED_APPS = [
+    # add corsheaders in the installed apps
+    'corsheaders',
+    ] + INSTALLED_APPS
+
+# add additional Middlewares
+MIDDLEWARE = [
+    # add the corsheaders in the middleware
+    'corsheaders.middleware.CorsMiddleware',
+    ] + MIDDLEWARE
+
+# only for testing
+CORS_ALLOW_ALL_ORIGINS = DEV
+
+# for production 
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://\w+\.biztyz\.in$",
+]
+
+CORS_ALLOWED_ORIGINS = [
+    "https://biztyz.in",
+    "https://customer.biztyz.in",
+    "https://event.biztyz.in",
+    "http://localhost:8080",
+    "http://127.0.0.1:9000"
+]
+
+# extended cors headers
+from corsheaders.defaults import default_headers
+
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    'cache-control',
+]
+
+# Database
+# https://docs.djangoproject.com/en/1.11/ref/settings/#databases
+
+DATABASE_NAME = 'adme_biztyz'
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',         # geo spartial databases
+        'OPTIONS': {
+            'options': '-c search_path=mrktyz'
+        },
+        'NAME': DATABASE_NAME,
+        'USER': 'xxx',
+        'PASSWORD': 'xxx',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    },
+    'biztyz_db': {
+        'ENGINE': 'django.contrib.gis.db.backends.postgis',         # geo spartial databases
+        'NAME': DATABASE_NAME,
+        'USER': 'xxx',
+        'PASSWORD': 'xxx',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
+
+# Security
+# https://docs.djangoproject.com/en/2.2/topics/security/
+
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_BROWSER_XSS_FILTER = True
+
+X_FRAME_OPTIONS = 'DENY'
+
+# https://github.com/DmytroLitvinov/django-http-referrer-policy
+# https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy#Syntax
+REFERRER_POLICY = 'same-origin'
+
+# Timeouts
+EMAIL_TIMEOUT = 5
+
+# get the API key from the OS level setting
+SENDGRID_API_KEY = os.environ["SENDGRID_API_KEY"]
+
+HOST_URL = 'xxx'
+
+SERVICES = {
+    'kaleyra':{
+        'SID' : 'XXXXXXXXXX',
+        'API_KEY' : 'XXXXXXXXXX',
+        'API_DOMAIN' : 'XXXXXXXXXX',
+    },
+    'twilio':{
+        'SID' : 'XXXXXXXXXX',
+        'AUTH_TOKEN' : 'XXXXXXXXXX',
+    },
+    'telegram' : {
+        'BOT_TOKEN' : 'XXXXXXXXXX',
+        'CHAT_ID' : 'XXXXXXX', # default chat
+    }
+}
+
+SMS = {
+    'kaleyra':{
+        'SENDER_ID' : 'XXXXXXXXXX',
+        'CALLBACK_URL' : '',
+        'TEMPLATE_ID' : 'XXXXXXXXXX',
+    },
+    'twilio':{
+        'FROM' : 'XXXXXXXXXX',
+        'CALLBACK_URL' : '',
+        'TEMPLATE_ID' : 'XXXXXXXXXX',
+    }
+}
+
+WHATSAPP = {
+    'kaleyra':{
+        'SENDER_ID' : 'XXXXXXXXXX',
+    },
+    'twilio':{
+        'FROM' : 'XXXXXXXXXX',
+    }
+}
+
+# storage setting 
+STORAGE = {
+    'default': {
+        'type': 'aws_s3',
+        'access_key_id': 'XXXXXXXXXX',
+        'secret_access_key': 'XXXXXXXXXX',
+        'bucket': 'XXXXXXXXXX',
+    },
+}
+
+# rest JWT configuration Override
+SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'] = timedelta(minutes=60)
+SIMPLE_JWT['SIGNING_KEY'] = '4u7x!A%D*G-KaPdSgVkYp3s6v8yFB?E('
+
+# logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': True,
+    'formatters': {
+        'standard': {
+            'format': '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+        },
+    },
+    'handlers': {
+        'default': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/logfile.log',
+            'maxBytes': 1024*1024*5,
+            'backupCount': 5,
+            'formatter': 'standard',
+        },
+        'request_handler': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/django_request.log',
+            'maxBytes': 1024*1024*5,
+            'backupCount': 5,
+            'formatter': 'standard',
+        },
+        'sql_query': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/sql_queries.log',
+            'maxBytes': 1024*1024*5,  # 5 MB,
+            'backupCount': 5,
+            'formatter': 'standard'
+        },
+        'security': {
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': 'logs/security.log',
+            'maxBytes': 1024*1024*5,  # 5 MB,
+            'backupCount': 100,
+            'formatter': 'standard'
+        },
+    },
+    'loggers': {
+        '': {
+            'handlers': ['default'],
+            'level': 'DEBUG',
+            'propagate': True
+        },
+        'session': {
+            'handlers': ['default'],
+            'level': 'DEBUG',
+            'propagate': True
+        },
+        'sqlalchemy.engine': {
+            'handlers': ['sql_query'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'django.request': {
+            'handlers': ['request_handler'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'django.db.backends': {
+            'handlers': ['sql_query'],
+            'level': 'DEBUG',
+            'propagate': False
+        },
+        'django.security.*': {
+            'handlers': ['security'],
+            'level': 'DEBUG',
+            'propagate': False
+        }
+    }
+}

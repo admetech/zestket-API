@@ -1,0 +1,17 @@
+[Unit]
+Description=gunicorn daemon
+Requires=mktyz_gunicorn.socket
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/var/www/biztyz/mktyz_api_server
+ExecStart=/var/www/biztyz/mktyz_api_server/venv/bin/gunicorn \
+          --access-logfile - \
+          --workers 3 \
+          --bind unix:/run/mktyz_gunicorn.sock \
+          server.wsgi:application
+
+[Install]
+WantedBy=multi-user.target
